@@ -34,6 +34,7 @@ class Orders extends Component {
         let orders = <Spinner />;
 
         if (this.state.loading === false) {
+            console.log("[Orders] this.state.orders", this.state.orders);
             orders = this.state.orders.map(order => (
                 <Order
                     key={order.id}
