@@ -14,15 +14,6 @@
     }
 }
 
-.ContactData label,
-.ContactData input {
-    display: block;
-}
-
-.ContactData input {
-    margin-bottom: 1em;
-}
-
-.ContactData label, .ContactData button {
+.ContactData button {
     text-transform: capitalize;
 }
