@@ -17,3 +17,9 @@
 .Auth button {
     text-transform: capitalize;
 }
+
+.Auth .ErrorMessage {
+    border: 2px solid red;
+    padding: 4px;
+    color: red;
+}

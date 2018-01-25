@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 
 import classes from "./Auth.css";
-
 import Input from "../../components/UI/Input/Input";
 import Button from "../../components/UI/Button/Button";
+import Spinner from "../../components/UI/Spinner/Spinner";
 import * as actions from "../../store/actions/index";
 
 class Auth extends Component {
@@ -14,7 +14,7 @@ class Auth extends Component {
                 elementType: "input",
                 elementConfig: {
                     type: "email",
-                    placeholder: "e-Mail Address"
+                    placeholder: "email address"
                 },
                 value: "",
                 validation: {
@@ -28,7 +28,7 @@ class Auth extends Component {
                 elementType: "input",
                 elementConfig: {
                     type: "password",
-                    placeholder: "Password"
+                    placeholder: "password"
                 },
                 value: "",
                 validation: {
@@ -38,13 +38,13 @@ class Auth extends Component {
                 valid: false,
                 touched: false
             }
-        }
+        },
+        isSignUp: true
     };
 
     checkValidity(value, rules) {
-        // should return true or false - whether valid or not
-
         let isValid = true;
+
         if (!rules) {
             return true;
         }
@@ -74,29 +74,38 @@ class Auth extends Component {
         return isValid;
     }
 
-    inputChangedHandler = ( event, controlName )=> {
+    inputChangedHandler = controlName => event => {
         const updatedControls = {
             ...this.state.controls,
             [controlName]: {
-                ...this.state.constrols[controlName],
+                ...this.state.controls[controlName],
                 value: event.target.value,
-                touched: true,
                 valid: this.checkValidity(
                     event.target.value,
                     this.state.controls[controlName].validation
-                )
+                ),
+                touched: true
             }
         };
         this.setState({ controls: updatedControls });
     };
 
-    submitHandler = event => {
+    formSubmitHandler = event => {
         event.preventDefault();
 
         const email = this.state.controls.email.value;
         const password = this.state.controls.password.value;
+        const isSignUp = this.state.isSignUp;
 
-        this.props.onAuth(email, password);
+        this.props.onAuth(email, password, isSignUp);
+    };
+
+    handleSwitchAuthMode = () => {
+        this.setState(prevState => {
+            return {
+                isSignUp: !prevState.isSignUp
+            };
+        });
     };
 
     render() {
@@ -109,36 +118,60 @@ class Auth extends Component {
             });
         }
 
-        const form = formElementArray.map(formElement => {
-            return (
-                <Input
-                    key={formElement.id}
-                    elementType={formElement.config.elementType}
-                    elementConfig={formElement.config.elementConfig}
-                    value={formElement.config.value}
-                    invalid={!formElement.config.valid}
-                    shouldValidate={formElement.config.validation}
-                    touched={formElement.config.touched}
-                    changed={(event) => this.inputChangedHandler(event, formElement.id)}
-                />
+        let form = formElementArray.map(formElement => (
+            <Input
+                key={formElement.id}
+                elementType={formElement.config.elementType}
+                elementConfig={formElement.config.elementConfig}
+                value={formElement.config.value}
+                invalid={!formElement.config.valid}
+                shouldValidate={formElement.config.validation}
+                touched={formElement.config.touched}
+                changed={this.inputChangedHandler(formElement.id)}
+            />
+        ));
+
+        if (this.props.loading) {
+            form = <Spinner />;
+        }
+
+        let errorMessage = null;
+
+        if (this.props.error) {
+            errorMessage = (
+                <p className={classes.ErrorMessage}>
+                    {this.props.error.message}
+                </p>
             );
-        });
+        }
 
         return (
             <div className={classes.Auth}>
-                <form onSubmit={this.submitHandler}>
+                {errorMessage}
+                <form onSubmit={this.formSubmitHandler}>
                     {form}
-                    <Button btnType="Success">Submit</Button>
+                    <Button btnType="Success">SUBMIT</Button>
                 </form>
+                <Button btnType="Danger" clicked={this.handleSwitchAuthMode}>
+                    Switch to: {this.state.isSignUp ? "Sign In" : "Sign Up"}
+                </Button>
             </div>
         );
     }
 }
 
-const mapDispatchToProps = dispatch => {
+const mapStateToProps = state => {
     return {
-        onAuth: (email, password) => dispatch(actions.auth(email, password))
+        loading: state.auth.loading,
+        error: state.auth.error
     };
 };
 
-export default connect(null, mapDispatchToProps)(Auth);
+const mapDispatchToProps = dispatch => {
+    return {
+        onAuth: (email, password, isSignUp) =>
+            dispatch(actions.auth(email, password, isSignUp))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Auth);
